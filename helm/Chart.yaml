@@ -1,0 +1,5 @@
+apiVersion: v2
+name: ghostfolio
+description: A Helm chart for self-hosting ghostfolio financial app
+version: 0.0.1
+appVersion: "2.147.0"

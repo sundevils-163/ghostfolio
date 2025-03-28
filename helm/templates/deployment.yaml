@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-app
+  labels:
+    {{- include "ghostfolio.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "ghostfolio.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ghostfolio.labels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: ghostfolio
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://ghostfolio:ghostfolio@{{ .Release.Name }}-postgres:5432/ghostfolio?sslmode=disable"
+        - name: REDIS_HOST
+          value: "{{ .Release.Name }}-redis"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: ACCESS_TOKEN_SALT
+          valueFrom:
+           secretKeyRef:
+            name: ghostfolio-secrets
+            key: access-token-salt
+        - name: JWT_SECRET_KEY
+          valueFrom:
+           secretKeyRef:
+            name: ghostfolio-secrets
+            key: jwt-secret-key
+        ports:
+        - containerPort: 3333
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3333
+          initialDelaySeconds: 10
+          periodSeconds: 5

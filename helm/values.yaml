@@ -1,0 +1,26 @@
+replicaCount: 1
+
+image:
+  repository: junzhutx/ghostfolio-homelab
+  tag: "2.147.0" # Or pin to "v0.2.0-rc2"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3333
+
+ingress:
+  enabled: true
+  hostname: ghostfolio.lan
+  ingressClassName: nginx # Adjust if using a different ingress controller
+
+postgres:
+  enabled: true
+  image: postgres:15-alpine
+  username: ghostfolio
+  password: ghostfolio
+  database: ghostfolio
+
+redis:
+  enabled: true
+  image: redis:alpine
