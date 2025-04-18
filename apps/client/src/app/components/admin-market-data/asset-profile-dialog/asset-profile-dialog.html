@@ -19,17 +19,21 @@
       <button
         mat-menu-item
         type="button"
-        [disabled]="assetProfileForm.dirty"
+        [disabled]="
+          assetProfileForm.dirty || !assetProfileForm.controls.isActive.value
+        "
         (click)="
           onGatherSymbol({ dataSource: data.dataSource, symbol: data.symbol })
         "
       >
-        <ng-container i18n>Gather Historical Market Dataa</ng-container>
+        <ng-container i18n>Gather Historical Market Data</ng-container>
       </button>
       <button
         mat-menu-item
         type="button"
-        [disabled]="assetProfileForm.dirty"
+        [disabled]="
+          assetProfileForm.dirty || !assetProfileForm.controls.isActive.value
+        "
         (click)="
           onGatherProfileDataBySymbol({
             dataSource: data.dataSource,
