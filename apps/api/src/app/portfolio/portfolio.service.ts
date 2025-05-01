@@ -50,13 +50,14 @@ import {
   UserSettings
 } from '@ghostfolio/common/interfaces';
 import { TimelinePosition } from '@ghostfolio/common/models';
-import type {
+import {
   AccountWithValue,
   DateRange,
   GroupBy,
   RequestWithUser,
   UserWithSettings
 } from '@ghostfolio/common/types';
+import { PerformanceCalculationType } from '@ghostfolio/common/types/performance-calculation-type.type';
 
 import { Inject, Injectable } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
@@ -85,10 +86,7 @@ import {
 import { isEmpty } from 'lodash';
 
 import { PortfolioCalculator } from './calculator/portfolio-calculator';
-import {
-  PerformanceCalculationType,
-  PortfolioCalculatorFactory
-} from './calculator/portfolio-calculator.factory';
+import { PortfolioCalculatorFactory } from './calculator/portfolio-calculator.factory';
 import { PortfolioHoldingDetail } from './interfaces/portfolio-holding-detail.interface';
 import { RulesService } from './rules.service';
 
@@ -141,7 +139,7 @@ export class PortfolioService {
     }
 
     if (filterByDataSource && filterBySymbol) {
-      where.Order = {
+      where.activities = {
         some: {
           SymbolProfile: {
             AND: [
@@ -156,7 +154,7 @@ export class PortfolioService {
     const [accounts, details] = await Promise.all([
       this.accountService.accounts({
         where,
-        include: { Order: true, Platform: true },
+        include: { activities: true, Platform: true },
         orderBy: { name: 'asc' }
       }),
       this.getDetails({
@@ -172,8 +170,8 @@ export class PortfolioService {
     return accounts.map((account) => {
       let transactionCount = 0;
 
-      for (const order of account.Order) {
-        if (!order.isDraft) {
+      for (const { isDraft } of account.activities) {
+        if (!isDraft) {
           transactionCount += 1;
         }
       }
@@ -197,7 +195,7 @@ export class PortfolioService {
         )
       };
 
-      delete result.Order;
+      delete result.activities;
 
       return result;
     });
@@ -278,14 +276,16 @@ export class PortfolioService {
     savingsRate: number;
   }): Promise<PortfolioInvestments> {
     const userId = await this.getUserId(impersonationId, this.request.user.id);
+    const user = await this.userService.user({ id: userId });
+    const userCurrency = this.getUserCurrency(user);
 
     const { endDate, startDate } = getIntervalFromDateRange(dateRange);
 
     const { activities } =
       await this.orderService.getOrdersForPortfolioCalculator({
         filters,
-        userId,
-        userCurrency: this.getUserCurrency()
+        userCurrency,
+        userId
       });
 
     if (activities.length === 0) {
@@ -299,8 +299,8 @@ export class PortfolioService {
       activities,
       filters,
       userId,
-      calculationType: PerformanceCalculationType.ROAI,
-      currency: this.request.user.Settings.settings.baseCurrency
+      calculationType: this.getUserPerformanceCalculationType(user),
+      currency: userCurrency
     });
 
     const { historicalData } = await portfolioCalculator.getSnapshot();
@@ -376,7 +376,7 @@ export class PortfolioService {
       activities,
       filters,
       userId,
-      calculationType: PerformanceCalculationType.ROAI,
+      calculationType: this.getUserPerformanceCalculationType(user),
       currency: userCurrency
     });
 
@@ -684,7 +684,7 @@ export class PortfolioService {
     const portfolioCalculator = this.calculatorFactory.createCalculator({
       activities,
       userId,
-      calculationType: PerformanceCalculationType.ROAI,
+      calculationType: this.getUserPerformanceCalculationType(user),
       currency: userCurrency
     });
 
@@ -748,8 +748,14 @@ export class PortfolioService {
       );
 
       const historicalDataArray: HistoricalDataItem[] = [];
-      let maxPrice = Math.max(activitiesOfPosition[0].unitPrice, marketPrice);
-      let minPrice = Math.min(activitiesOfPosition[0].unitPrice, marketPrice);
+      let maxPrice = Math.max(
+        activitiesOfPosition[0].unitPriceInAssetProfileCurrency,
+        marketPrice
+      );
+      let minPrice = Math.min(
+        activitiesOfPosition[0].unitPriceInAssetProfileCurrency,
+        marketPrice
+      );
 
       if (historicalData[aSymbol]) {
         let j = -1;
@@ -793,9 +799,9 @@ export class PortfolioService {
       } else {
         // Add historical entry for buy date, if no historical data available
         historicalDataArray.push({
-          averagePrice: activitiesOfPosition[0].unitPrice,
+          averagePrice: activitiesOfPosition[0].unitPriceInAssetProfileCurrency,
           date: firstBuyDate,
-          marketPrice: activitiesOfPosition[0].unitPrice,
+          marketPrice: activitiesOfPosition[0].unitPriceInAssetProfileCurrency,
           quantity: activitiesOfPosition[0].quantity
         });
       }
@@ -935,12 +941,13 @@ export class PortfolioService {
     })?.id;
     const userId = await this.getUserId(impersonationId, this.request.user.id);
     const user = await this.userService.user({ id: userId });
+    const userCurrency = this.getUserCurrency(user);
 
     const { activities } =
       await this.orderService.getOrdersForPortfolioCalculator({
         filters,
-        userId,
-        userCurrency: this.getUserCurrency()
+        userCurrency,
+        userId
       });
 
     if (activities.length === 0) {
@@ -954,8 +961,8 @@ export class PortfolioService {
       activities,
       filters,
       userId,
-      calculationType: PerformanceCalculationType.ROAI,
-      currency: this.request.user.Settings.settings.baseCurrency
+      calculationType: this.getUserPerformanceCalculationType(user),
+      currency: userCurrency
     });
 
     const portfolioSnapshot = await portfolioCalculator.getSnapshot();
@@ -1120,7 +1127,7 @@ export class PortfolioService {
       activities,
       filters,
       userId,
-      calculationType: PerformanceCalculationType.ROAI,
+      calculationType: this.getUserPerformanceCalculationType(user),
       currency: userCurrency
     });
 
@@ -2019,6 +2026,12 @@ export class PortfolioService {
       await this.impersonationService.validateImpersonationId(aImpersonationId);
 
     return impersonationUserId || aUserId;
+  }
+
+  private getUserPerformanceCalculationType(
+    aUser: UserWithSettings
+  ): PerformanceCalculationType {
+    return aUser?.Settings?.settings.performanceCalculationType;
   }
 
   private async getValueOfAccountsAndPlatforms({

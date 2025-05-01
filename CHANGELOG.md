@@ -5,11 +5,87 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.158.0 - 2025-04-30
 
 ### Added
 
+- Added support to delete an asset from the watchlist (experimental)
+
+### Changed
+
+- Renamed `Order` to `activities` in the `Account` database schema
+- Improved the language localization for German (`de`)
+
+### Fixed
+
+- Fixed an issue with the saving of activities with type `INTEREST`, `ITEM` and `LIABILITY`
+
+## 2.157.1 - 2025-04-29
+
+### Added
+
+- Introduced a watchlist to follow assets (experimental)
+
+### Changed
+
+- Changed the column label from _Index_ to _Name_ in the benchmark component
+- Extended the data providers management of the admin control panel
+- Improved the language localization for German (`de`)
+
+## 2.156.0 - 2025-04-27
+
+### Changed
+
+- Improved the error message of the currency code validation
+- Tightened the currency code validation by requiring uppercase letters
+- Respected the watcher count for the delete asset profiles checkbox in the historical market data table of the admin control panel
+- Improved the language localization for Français (`fr`)
+- Upgraded `ngx-skeleton-loader` from version `10.0.0` to `11.0.0`
+- Upgraded `Nx` from version `20.8.0` to `20.8.1`
+
+### Fixed
+
+- Fixed an issue with the investment calculation for activities in a custom currency
+- Improved the file selector of the activities import functionality to accept case-insensitive file extensions (`.CSV` and `.JSON`)
+- Fixed the missing localization for "someone" on the public page
+
+## 2.155.0 - 2025-04-23
+
+### Added
+
+- Added the endpoints (`DELETE`, `GET` and `POST`) for the watchlist
+
+### Changed
+
+- Simplified the data source check in the DTO of the activity creation
+- Simplified the data source check in the DTO of the asset profile update
+- Renamed `User` to `user` in the `Subscription` database schema
+- Migrated the `@ghostfolio/ui/assistant` component to control flow
+- Migrated the `@ghostfolio/ui/value` component to control flow
+
+### Fixed
+
+- Fixed an issue in the settings dialog to customize the rule thresholds of the _X-ray_ page (experimental)
+
+## 2.154.0 - 2025-04-21
+
+### Added
+
+- Extended the benchmark detail dialog by the current market price
+- Added the performance calculation type to the user settings (experimental)
 - Added `watchlist` to the `User` database schema as a preparation for watching assets
+
+### Changed
+
+- Made the historical market data editor expandable in the admin control panel
+- Renamed `Subscription` to `subscriptions` in the `User` database schema
+- Parallelized the requests in the get quotes functionality of the _Financial Modeling Prep_ service
+- Migrated the lookup functionality by `isin` of the _Financial Modeling Prep_ service to its stable API version
+- Improved the language localization for German (`de`)
+
+### Fixed
+
+- Fixed the word wrap in the menu of the historical market data table in the admin control panel
 
 ## 2.153.0 - 2025-04-18
 

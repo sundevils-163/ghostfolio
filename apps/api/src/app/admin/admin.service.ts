@@ -29,7 +29,7 @@ import {
   Filter
 } from '@ghostfolio/common/interfaces';
 import { Sector } from '@ghostfolio/common/interfaces/sector.interface';
-import { MarketDataPreset } from '@ghostfolio/common/types';
+import { MarketDataPreset, UserWithSettings } from '@ghostfolio/common/types';
 
 import {
   BadRequestException,
@@ -134,7 +134,9 @@ export class AdminService {
     }
   }
 
-  public async get(): Promise<AdminData> {
+  public async get({ user }: { user: UserWithSettings }): Promise<AdminData> {
+    const dataSources = await this.dataProviderService.getDataSources({ user });
+
     const [settings, transactionCount, userCount] = await Promise.all([
       this.propertyService.get(),
       this.prismaService.order.count(),
@@ -145,6 +147,11 @@ export class AdminService {
       settings,
       transactionCount,
       userCount,
+      dataProviders: dataSources.map((dataSource) => {
+        return this.dataProviderService
+          .getDataProvider(dataSource)
+          .getDataProviderInfo();
+      }),
       version: environment.version
     };
   }
@@ -238,7 +245,10 @@ export class AdminService {
           where,
           select: {
             _count: {
-              select: { Order: true }
+              select: {
+                Order: true,
+                watchedBy: true
+              }
             },
             assetClass: true,
             assetSubClass: true,
@@ -375,7 +385,9 @@ export class AdminService {
               sectorsCount,
               activitiesCount: _count.Order,
               date: Order?.[0]?.date,
-              isUsedByUsersWithSubscription: await isUsedByUsersWithSubscription
+              isUsedByUsersWithSubscription:
+                await isUsedByUsersWithSubscription,
+              watchedByCount: _count.watchedBy
             };
           }
         )
@@ -645,7 +657,7 @@ export class AdminService {
                           Order: {
                             where: {
                               User: {
-                                Subscription: {
+                                subscriptions: {
                                   some: {
                                     expiresAt: {
                                       gt: new Date()
@@ -752,7 +764,8 @@ export class AdminService {
           id: undefined,
           isActive: true,
           name: symbol,
-          sectorsCount: 0
+          sectorsCount: 0,
+          watchedByCount: 0
         };
       }
     );
@@ -806,7 +819,7 @@ export class AdminService {
         createdAt: true,
         id: true,
         role: true,
-        Subscription: {
+        subscriptions: {
           orderBy: {
             expiresAt: 'desc'
           },
@@ -821,7 +834,7 @@ export class AdminService {
     });
 
     return usersWithAnalytics.map(
-      ({ _count, Analytics, createdAt, id, role, Subscription }) => {
+      ({ _count, Analytics, createdAt, id, role, subscriptions }) => {
         const daysSinceRegistration =
           differenceInDays(new Date(), createdAt) + 1;
         const engagement = Analytics
@@ -830,8 +843,8 @@ export class AdminService {
 
         const subscription =
           this.configurationService.get('ENABLE_FEATURE_SUBSCRIPTION') &&
-          Subscription?.length > 0
-            ? Subscription[0]
+          subscriptions?.length > 0
+            ? subscriptions[0]
             : undefined;
 
         return {

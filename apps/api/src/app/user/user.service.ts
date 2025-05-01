@@ -41,6 +41,7 @@ import {
   permissions
 } from '@ghostfolio/common/permissions';
 import { UserWithSettings } from '@ghostfolio/common/types';
+import { PerformanceCalculationType } from '@ghostfolio/common/types/performance-calculation-type.type';
 
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -189,7 +190,7 @@ export class UserService {
       provider,
       role,
       Settings,
-      Subscription,
+      subscriptions,
       thirdPartyId,
       updatedAt
     } = await this.prismaService.user.findUnique({
@@ -200,7 +201,7 @@ export class UserService {
         },
         Analytics: true,
         Settings: true,
-        Subscription: true
+        subscriptions: true
       },
       where: userWhereUniqueInput
     });
@@ -245,6 +246,12 @@ export class UserService {
       (user.Settings.settings as UserSettings).viewMode === 'ZEN'
         ? 'max'
         : ((user.Settings.settings as UserSettings)?.dateRange ?? 'max');
+
+    // Set default value for performance calculation type
+    if (!(user.Settings.settings as UserSettings)?.performanceCalculationType) {
+      (user.Settings.settings as UserSettings).performanceCalculationType =
+        PerformanceCalculationType.ROAI;
+    }
 
     // Set default value for view mode
     if (!(user.Settings.settings as UserSettings).viewMode) {
@@ -340,8 +347,8 @@ export class UserService {
 
     if (this.configurationService.get('ENABLE_FEATURE_SUBSCRIPTION')) {
       user.subscription = await this.subscriptionService.getSubscription({
-        createdAt: user.createdAt,
-        subscriptions: Subscription
+        subscriptions,
+        createdAt: user.createdAt
       });
 
       if (user.subscription?.type === 'Basic') {
@@ -349,18 +356,20 @@ export class UserService {
           new Date(),
           user.createdAt
         );
-        let frequency = 10;
+        let frequency = 7;
 
-        if (daysSinceRegistration > 365) {
+        if (daysSinceRegistration > 720) {
+          frequency = 1;
+        } else if (daysSinceRegistration > 360) {
           frequency = 2;
         } else if (daysSinceRegistration > 180) {
           frequency = 3;
         } else if (daysSinceRegistration > 60) {
           frequency = 4;
         } else if (daysSinceRegistration > 30) {
-          frequency = 6;
+          frequency = 5;
         } else if (daysSinceRegistration > 15) {
-          frequency = 8;
+          frequency = 6;
         }
 
         if (Analytics?.activityCount % frequency === 1) {
@@ -373,6 +382,7 @@ export class UserService {
           permissions.createAccess,
           permissions.createMarketDataOfOwnAssetProfile,
           permissions.createOwnTag,
+          permissions.createWatchlistItem,
           permissions.readAiPrompt,
           permissions.readMarketDataOfOwnAssetProfile,
           permissions.updateMarketDataOfOwnAssetProfile

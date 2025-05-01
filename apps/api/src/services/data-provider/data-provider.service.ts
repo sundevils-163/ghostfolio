@@ -18,6 +18,7 @@ import {
   DATE_FORMAT,
   getCurrencyFromSymbol,
   getStartOfUtcDate,
+  isCurrency,
   isDerivedCurrency
 } from '@ghostfolio/common/helper';
 import {
@@ -25,6 +26,7 @@ import {
   LookupItem,
   LookupResponse
 } from '@ghostfolio/common/interfaces';
+import { hasRole } from '@ghostfolio/common/permissions';
 import type { Granularity, UserWithSettings } from '@ghostfolio/common/types';
 
 import { Inject, Injectable, Logger } from '@nestjs/common';
@@ -168,6 +170,7 @@ export class DataProviderService {
     let dataSourcesKey: 'DATA_SOURCES' | 'DATA_SOURCES_LEGACY' = 'DATA_SOURCES';
 
     if (
+      !hasRole(user, 'ADMIN') &&
       isBefore(user.createdAt, new Date('2025-03-23')) &&
       this.configurationService.get('DATA_SOURCES_LEGACY')?.length > 0
     ) {
@@ -184,7 +187,7 @@ export class DataProviderService {
       PROPERTY_API_KEY_GHOSTFOLIO
     )) as string;
 
-    if (ghostfolioApiKey) {
+    if (ghostfolioApiKey || hasRole(user, 'ADMIN')) {
       dataSources.push('GHOSTFOLIO');
     }
 
@@ -468,17 +471,21 @@ export class DataProviderService {
     )) {
       const dataProvider = this.getDataProvider(DataSource[dataSource]);
 
-      if (
-        dataProvider.getDataProviderInfo().isPremium &&
-        this.configurationService.get('ENABLE_FEATURE_SUBSCRIPTION') &&
-        user?.subscription.type === 'Basic'
-      ) {
-        continue;
-      }
-
       const symbols = assetProfileIdentifiers
         .filter(({ symbol }) => {
-          return !isDerivedCurrency(getCurrencyFromSymbol(symbol));
+          if (isCurrency(getCurrencyFromSymbol(symbol))) {
+            // Keep non-derived currencies
+            return !isDerivedCurrency(getCurrencyFromSymbol(symbol));
+          } else if (
+            dataProvider.getDataProviderInfo().isPremium &&
+            this.configurationService.get('ENABLE_FEATURE_SUBSCRIPTION') &&
+            user?.subscription.type === 'Basic'
+          ) {
+            // Skip symbols of Premium data providers for users without subscription
+            return false;
+          }
+
+          return true;
         })
         .map(({ symbol }) => {
           return symbol;
@@ -665,6 +672,7 @@ export class DataProviderService {
             lookupItem.dataProviderInfo.isPremium = false;
           }
 
+          lookupItem.dataProviderInfo.dataSource = undefined;
           lookupItem.dataProviderInfo.name = undefined;
           lookupItem.dataProviderInfo.url = undefined;
         } else {
