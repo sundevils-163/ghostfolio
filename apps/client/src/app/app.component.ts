@@ -3,6 +3,7 @@ import { HoldingDetailDialogParams } from '@ghostfolio/client/components/holding
 import { getCssVariable } from '@ghostfolio/common/helper';
 import { InfoItem, User } from '@ghostfolio/common/interfaces';
 import { hasPermission, permissions } from '@ghostfolio/common/permissions';
+import { publicRoutes, routes } from '@ghostfolio/common/routes';
 import { ColorScheme } from '@ghostfolio/common/types';
 
 import { DOCUMENT } from '@angular/common';
@@ -62,29 +63,25 @@ export class AppComponent implements OnDestroy, OnInit {
   public hasTabs = false;
   public info: InfoItem;
   public pageTitle: string;
-  public routerLinkAbout = ['/' + $localize`:snake-case:about`];
-  public routerLinkAboutChangelog = [
-    '/' + $localize`:snake-case:about`,
-    'changelog'
-  ];
-  public routerLinkAboutLicense = [
-    '/' + $localize`:snake-case:about`,
-    $localize`:snake-case:license`
-  ];
+  public routerLinkAbout = ['/' + routes.about];
+  public routerLinkAboutChangelog = ['/' + routes.about, routes.changelog];
+  public routerLinkAboutLicense = ['/' + routes.about, routes.license];
   public routerLinkAboutPrivacyPolicy = [
-    '/' + $localize`:snake-case:about`,
-    $localize`:snake-case:privacy-policy`
+    '/' + routes.about,
+    routes.privacyPolicy
   ];
   public routerLinkAboutTermsOfService = [
-    '/' + $localize`:snake-case:about`,
-    $localize`:snake-case:terms-of-service`
+    '/' + routes.about,
+    routes.termsOfService
   ];
-  public routerLinkFaq = ['/' + $localize`:snake-case:faq`];
-  public routerLinkFeatures = ['/' + $localize`:snake-case:features`];
-  public routerLinkMarkets = ['/' + $localize`:snake-case:markets`];
-  public routerLinkPricing = ['/' + $localize`:snake-case:pricing`];
-  public routerLinkRegister = ['/' + $localize`:snake-case:register`];
-  public routerLinkResources = ['/' + $localize`:snake-case:resources`];
+  public routerLinkBlog = ['/' + routes.blog];
+  public routerLinkFaq = ['/' + routes.faq];
+  public routerLinkFeatures = ['/' + routes.features];
+  public routerLinkMarkets = ['/' + routes.markets];
+  public routerLinkOpenStartup = ['/' + publicRoutes.openStartup.path];
+  public routerLinkPricing = ['/' + routes.pricing];
+  public routerLinkRegister = ['/' + publicRoutes.register.path];
+  public routerLinkResources = ['/' + routes.resources];
   public showFooter = false;
   public user: User;
 

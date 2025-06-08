@@ -20,8 +20,10 @@ import { RegionalMarketClusterRiskEmergingMarkets } from '@ghostfolio/api/models
 import { RegionalMarketClusterRiskEurope } from '@ghostfolio/api/models/rules/regional-market-cluster-risk/europe';
 import { RegionalMarketClusterRiskJapan } from '@ghostfolio/api/models/rules/regional-market-cluster-risk/japan';
 import { RegionalMarketClusterRiskNorthAmerica } from '@ghostfolio/api/models/rules/regional-market-cluster-risk/north-america';
+import { BenchmarkService } from '@ghostfolio/api/services/benchmark/benchmark.service';
 import { DataProviderService } from '@ghostfolio/api/services/data-provider/data-provider.service';
 import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data/exchange-rate-data.service';
+import { I18nService } from '@ghostfolio/api/services/i18n/i18n.service';
 import { ImpersonationService } from '@ghostfolio/api/services/impersonation/impersonation.service';
 import { SymbolProfileService } from '@ghostfolio/api/services/symbol-profile/symbol-profile.service';
 import {
@@ -30,17 +32,18 @@ import {
 } from '@ghostfolio/common/calculation-helper';
 import {
   DEFAULT_CURRENCY,
-  EMERGENCY_FUND_TAG_ID,
+  TAG_ID_EMERGENCY_FUND,
   UNKNOWN_KEY
 } from '@ghostfolio/common/config';
 import { DATE_FORMAT, getSum, parseDate } from '@ghostfolio/common/helper';
 import {
-  Accounts,
+  AccountsResponse,
   EnhancedSymbolProfile,
   Filter,
   HistoricalDataItem,
   InvestmentItem,
   PortfolioDetails,
+  PortfolioHoldingResponse,
   PortfolioInvestments,
   PortfolioPerformanceResponse,
   PortfolioPosition,
@@ -87,7 +90,6 @@ import { isEmpty } from 'lodash';
 
 import { PortfolioCalculator } from './calculator/portfolio-calculator';
 import { PortfolioCalculatorFactory } from './calculator/portfolio-calculator.factory';
-import { PortfolioHoldingDetail } from './interfaces/portfolio-holding-detail.interface';
 import { RulesService } from './rules.service';
 
 const asiaPacificMarkets = require('../../assets/countries/asia-pacific-markets.json');
@@ -100,9 +102,11 @@ export class PortfolioService {
   public constructor(
     private readonly accountBalanceService: AccountBalanceService,
     private readonly accountService: AccountService,
+    private readonly benchmarkService: BenchmarkService,
     private readonly calculatorFactory: PortfolioCalculatorFactory,
     private readonly dataProviderService: DataProviderService,
     private readonly exchangeRateDataService: ExchangeRateDataService,
+    private readonly i18nService: I18nService,
     private readonly impersonationService: ImpersonationService,
     private readonly orderService: OrderService,
     @Inject(REQUEST) private readonly request: RequestWithUser,
@@ -209,7 +213,7 @@ export class PortfolioService {
     filters?: Filter[];
     userId: string;
     withExcludedAccounts?: boolean;
-  }): Promise<Accounts> {
+  }): Promise<AccountsResponse> {
     const accounts = await this.getAccounts({
       filters,
       userId,
@@ -540,7 +544,7 @@ export class PortfolioService {
     }
 
     if (filters?.length === 0 || isFilteredByAccount || isFilteredByCash) {
-      const cashPositions = await this.getCashPositions({
+      const cashPositions = this.getCashPositions({
         cashDetails,
         userCurrency,
         value: filteredValueInBaseCurrency
@@ -562,10 +566,10 @@ export class PortfolioService {
 
     if (
       filters?.length === 1 &&
-      filters[0].id === EMERGENCY_FUND_TAG_ID &&
+      filters[0].id === TAG_ID_EMERGENCY_FUND &&
       filters[0].type === 'TAG'
     ) {
-      const emergencyFundCashPositions = await this.getCashPositions({
+      const emergencyFundCashPositions = this.getCashPositions({
         cashDetails,
         userCurrency,
         value: filteredValueInBaseCurrency
@@ -631,11 +635,11 @@ export class PortfolioService {
     };
   }
 
-  public async getPosition(
+  public async getHolding(
     aDataSource: DataSource,
     aImpersonationId: string,
     aSymbol: string
-  ): Promise<PortfolioHoldingDetail> {
+  ): Promise<PortfolioHoldingResponse> {
     const userId = await this.getUserId(aImpersonationId, this.request.user.id);
     const user = await this.userService.user({ id: userId });
     const userCurrency = this.getUserCurrency(user);
@@ -648,6 +652,7 @@ export class PortfolioService {
 
     if (activities.length === 0) {
       return {
+        activities: [],
         averagePrice: undefined,
         dataProviderInfo: undefined,
         dividendInBaseCurrency: undefined,
@@ -660,15 +665,15 @@ export class PortfolioService {
         grossPerformancePercentWithCurrencyEffect: undefined,
         grossPerformanceWithCurrencyEffect: undefined,
         historicalData: [],
-        investment: undefined,
+        investmentInBaseCurrencyWithCurrencyEffect: undefined,
         marketPrice: undefined,
-        maxPrice: undefined,
-        minPrice: undefined,
+        marketPriceMax: undefined,
+        marketPriceMin: undefined,
         netPerformance: undefined,
         netPerformancePercent: undefined,
         netPerformancePercentWithCurrencyEffect: undefined,
         netPerformanceWithCurrencyEffect: undefined,
-        orders: [],
+        performances: undefined,
         quantity: undefined,
         SymbolProfile: undefined,
         tags: [],
@@ -714,7 +719,7 @@ export class PortfolioService {
         transactionCount
       } = position;
 
-      const activitiesOfPosition = activities.filter(({ SymbolProfile }) => {
+      const activitiesOfHolding = activities.filter(({ SymbolProfile }) => {
         return (
           SymbolProfile.dataSource === dataSource &&
           SymbolProfile.symbol === symbol
@@ -748,12 +753,16 @@ export class PortfolioService {
       );
 
       const historicalDataArray: HistoricalDataItem[] = [];
-      let maxPrice = Math.max(
-        activitiesOfPosition[0].unitPriceInAssetProfileCurrency,
+      let marketPriceMax = Math.max(
+        activitiesOfHolding[0].unitPriceInAssetProfileCurrency,
         marketPrice
       );
-      let minPrice = Math.min(
-        activitiesOfPosition[0].unitPriceInAssetProfileCurrency,
+      let marketPriceMaxDate =
+        marketPrice > activitiesOfHolding[0].unitPriceInAssetProfileCurrency
+          ? new Date()
+          : activitiesOfHolding[0].date;
+      let marketPriceMin = Math.min(
+        activitiesOfHolding[0].unitPriceInAssetProfileCurrency,
         marketPrice
       );
 
@@ -793,27 +802,40 @@ export class PortfolioService {
             quantity: currentQuantity
           });
 
-          maxPrice = Math.max(marketPrice ?? 0, maxPrice);
-          minPrice = Math.min(marketPrice ?? Number.MAX_SAFE_INTEGER, minPrice);
+          if (marketPrice > marketPriceMax) {
+            marketPriceMax = marketPrice;
+            marketPriceMaxDate = parseISO(date);
+          }
+          marketPriceMin = Math.min(
+            marketPrice ?? Number.MAX_SAFE_INTEGER,
+            marketPriceMin
+          );
         }
       } else {
         // Add historical entry for buy date, if no historical data available
         historicalDataArray.push({
-          averagePrice: activitiesOfPosition[0].unitPriceInAssetProfileCurrency,
+          averagePrice: activitiesOfHolding[0].unitPriceInAssetProfileCurrency,
           date: firstBuyDate,
-          marketPrice: activitiesOfPosition[0].unitPriceInAssetProfileCurrency,
-          quantity: activitiesOfPosition[0].quantity
+          marketPrice: activitiesOfHolding[0].unitPriceInAssetProfileCurrency,
+          quantity: activitiesOfHolding[0].quantity
         });
       }
+
+      const performancePercent =
+        this.benchmarkService.calculateChangeInPercentage(
+          marketPriceMax,
+          marketPrice
+        );
 
       return {
         firstBuyDate,
         marketPrice,
-        maxPrice,
-        minPrice,
+        marketPriceMax,
+        marketPriceMin,
         SymbolProfile,
         tags,
         transactionCount,
+        activities: activitiesOfHolding,
         averagePrice: averagePrice.toNumber(),
         dataProviderInfo: portfolioCalculator.getDataProviderInfos()?.[0],
         dividendInBaseCurrency: dividendInBaseCurrency.toNumber(),
@@ -833,7 +855,8 @@ export class PortfolioService {
         grossPerformanceWithCurrencyEffect:
           position.grossPerformanceWithCurrencyEffect?.toNumber(),
         historicalData: historicalDataArray,
-        investment: position.investment?.toNumber(),
+        investmentInBaseCurrencyWithCurrencyEffect:
+          position.investmentWithCurrencyEffect?.toNumber(),
         netPerformance: position.netPerformance?.toNumber(),
         netPerformancePercent: position.netPerformancePercentage?.toNumber(),
         netPerformancePercentWithCurrencyEffect:
@@ -842,7 +865,12 @@ export class PortfolioService {
           ]?.toNumber(),
         netPerformanceWithCurrencyEffect:
           position.netPerformanceWithCurrencyEffectMap?.['max']?.toNumber(),
-        orders: activitiesOfPosition,
+        performances: {
+          allTimeHigh: {
+            performancePercent,
+            date: marketPriceMaxDate
+          }
+        },
         quantity: quantity.toNumber(),
         value: this.exchangeRateDataService.toCurrency(
           quantity.mul(marketPrice ?? 0).toNumber(),
@@ -881,8 +909,9 @@ export class PortfolioService {
       }
 
       const historicalDataArray: HistoricalDataItem[] = [];
-      let maxPrice = marketPrice;
-      let minPrice = marketPrice;
+      let marketPriceMax = marketPrice;
+      let marketPriceMaxDate = new Date();
+      let marketPriceMin = marketPrice;
 
       for (const [date, { marketPrice }] of Object.entries(
         historicalData[aSymbol]
@@ -892,15 +921,28 @@ export class PortfolioService {
           value: marketPrice
         });
 
-        maxPrice = Math.max(marketPrice ?? 0, maxPrice);
-        minPrice = Math.min(marketPrice ?? Number.MAX_SAFE_INTEGER, minPrice);
+        if (marketPrice > marketPriceMax) {
+          marketPriceMax = marketPrice;
+          marketPriceMaxDate = parseISO(date);
+        }
+        marketPriceMin = Math.min(
+          marketPrice ?? Number.MAX_SAFE_INTEGER,
+          marketPriceMin
+        );
       }
+
+      const performancePercent =
+        this.benchmarkService.calculateChangeInPercentage(
+          marketPriceMax,
+          marketPrice
+        );
 
       return {
         marketPrice,
-        maxPrice,
-        minPrice,
+        marketPriceMax,
+        marketPriceMin,
         SymbolProfile,
+        activities: [],
         averagePrice: 0,
         dataProviderInfo: undefined,
         dividendInBaseCurrency: 0,
@@ -913,12 +955,17 @@ export class PortfolioService {
         grossPerformancePercentWithCurrencyEffect: undefined,
         grossPerformanceWithCurrencyEffect: undefined,
         historicalData: historicalDataArray,
-        investment: 0,
+        investmentInBaseCurrencyWithCurrencyEffect: 0,
         netPerformance: undefined,
         netPerformancePercent: undefined,
         netPerformancePercentWithCurrencyEffect: undefined,
         netPerformanceWithCurrencyEffect: undefined,
-        orders: [],
+        performances: {
+          allTimeHigh: {
+            performancePercent,
+            date: marketPriceMaxDate
+          }
+        },
         quantity: 0,
         tags: [],
         transactionCount: undefined,
@@ -927,7 +974,7 @@ export class PortfolioService {
     }
   }
 
-  public async getPositions({
+  public async getHoldings({
     dateRange = 'max',
     filters,
     impersonationId
@@ -1205,7 +1252,7 @@ export class PortfolioService {
 
     const rules: PortfolioReportResponse['rules'] = {
       accountClusterRisk:
-        summary.ordersCount > 0
+        summary.activityCount > 0
           ? await this.rulesService.evaluate(
               [
                 new AccountClusterRiskCurrentInvestment(
@@ -1221,7 +1268,7 @@ export class PortfolioService {
             )
           : undefined,
       assetClassClusterRisk:
-        summary.ordersCount > 0
+        summary.activityCount > 0
           ? await this.rulesService.evaluate(
               [
                 new AssetClassClusterRiskEquity(
@@ -1237,7 +1284,7 @@ export class PortfolioService {
             )
           : undefined,
       currencyClusterRisk:
-        summary.ordersCount > 0
+        summary.activityCount > 0
           ? await this.rulesService.evaluate(
               [
                 new CurrencyClusterRiskBaseCurrencyCurrentInvestment(
@@ -1253,7 +1300,7 @@ export class PortfolioService {
             )
           : undefined,
       economicMarketClusterRisk:
-        summary.ordersCount > 0
+        summary.activityCount > 0
           ? await this.rulesService.evaluate(
               [
                 new EconomicMarketClusterRiskDevelopedMarkets(
@@ -1274,6 +1321,8 @@ export class PortfolioService {
         [
           new EmergencyFundSetup(
             this.exchangeRateDataService,
+            this.i18nService,
+            userSettings.language,
             this.getTotalEmergencyFund({
               userSettings,
               emergencyFundHoldingsValueInBaseCurrency:
@@ -1287,6 +1336,8 @@ export class PortfolioService {
         [
           new FeeRatioInitialInvestment(
             this.exchangeRateDataService,
+            this.i18nService,
+            userSettings.language,
             summary.committedFunds,
             summary.fees
           )
@@ -1294,7 +1345,7 @@ export class PortfolioService {
         userSettings
       ),
       regionalMarketClusterRisk:
-        summary.ordersCount > 0
+        summary.activityCount > 0
           ? await this.rulesService.evaluate(
               [
                 new RegionalMarketClusterRiskAsiaPacific(
@@ -1488,7 +1539,7 @@ export class PortfolioService {
     return { markets, marketsAdvanced };
   }
 
-  private async getCashPositions({
+  private getCashPositions({
     cashDetails,
     userCurrency,
     value
@@ -1610,7 +1661,7 @@ export class PortfolioService {
     const emergencyFundHoldings = Object.values(holdings).filter(({ tags }) => {
       return (
         tags?.some(({ id }) => {
-          return id === EMERGENCY_FUND_TAG_ID;
+          return id === TAG_ID_EMERGENCY_FUND;
         }) ?? false
       );
     });
@@ -1937,6 +1988,9 @@ export class PortfolioService {
       netPerformanceWithCurrencyEffect,
       totalBuy,
       totalSell,
+      activityCount: activities.filter(({ type }) => {
+        return ['BUY', 'SELL'].includes(type);
+      }).length,
       committedFunds: committedFunds.toNumber(),
       currentValueInBaseCurrency: currentValueInBaseCurrency.toNumber(),
       dividendInBaseCurrency: dividendInBaseCurrency.toNumber(),
@@ -1964,9 +2018,6 @@ export class PortfolioService {
       interest: interest.toNumber(),
       items: valuables.toNumber(),
       liabilities: liabilities.toNumber(),
-      ordersCount: activities.filter(({ type }) => {
-        return ['BUY', 'SELL'].includes(type);
-      }).length,
       totalInvestment: totalInvestment.toNumber(),
       totalValueInBaseCurrency: netWorth
     };

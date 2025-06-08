@@ -1,4 +1,5 @@
 import { DataService } from '@ghostfolio/client/services/data.service';
+import { ImpersonationStorageService } from '@ghostfolio/client/services/impersonation-storage.service';
 import { UserService } from '@ghostfolio/client/services/user/user.service';
 import {
   AssetProfileIdentifier,
@@ -6,6 +7,7 @@ import {
   User
 } from '@ghostfolio/common/interfaces';
 import { hasPermission, permissions } from '@ghostfolio/common/permissions';
+import { BenchmarkTrend } from '@ghostfolio/common/types';
 import { GfBenchmarkComponent } from '@ghostfolio/ui/benchmark';
 import { GfPremiumIndicatorComponent } from '@ghostfolio/ui/premium-indicator';
 
@@ -44,6 +46,7 @@ import { CreateWatchlistItemDialogParams } from './create-watchlist-item-dialog/
 })
 export class HomeWatchlistComponent implements OnDestroy, OnInit {
   public deviceType: string;
+  public hasImpersonationId: boolean;
   public hasPermissionToCreateWatchlistItem: boolean;
   public hasPermissionToDeleteWatchlistItem: boolean;
   public user: User;
@@ -56,11 +59,19 @@ export class HomeWatchlistComponent implements OnDestroy, OnInit {
     private dataService: DataService,
     private deviceService: DeviceDetectorService,
     private dialog: MatDialog,
+    private impersonationStorageService: ImpersonationStorageService,
     private route: ActivatedRoute,
     private router: Router,
     private userService: UserService
   ) {
     this.deviceType = this.deviceService.getDeviceInfo().deviceType;
+
+    this.impersonationStorageService
+      .onChangeHasImpersonation()
+      .pipe(takeUntil(this.unsubscribeSubject))
+      .subscribe((impersonationId) => {
+        this.hasImpersonationId = !!impersonationId;
+      });
 
     this.route.queryParams
       .pipe(takeUntil(this.unsubscribeSubject))
@@ -76,14 +87,18 @@ export class HomeWatchlistComponent implements OnDestroy, OnInit {
         if (state?.user) {
           this.user = state.user;
 
-          this.hasPermissionToCreateWatchlistItem = hasPermission(
-            this.user.permissions,
-            permissions.createWatchlistItem
-          );
-          this.hasPermissionToDeleteWatchlistItem = hasPermission(
-            this.user.permissions,
-            permissions.deleteWatchlistItem
-          );
+          this.hasPermissionToCreateWatchlistItem =
+            !this.hasImpersonationId &&
+            hasPermission(
+              this.user.permissions,
+              permissions.createWatchlistItem
+            );
+          this.hasPermissionToDeleteWatchlistItem =
+            !this.hasImpersonationId &&
+            hasPermission(
+              this.user.permissions,
+              permissions.deleteWatchlistItem
+            );
 
           this.changeDetectorRef.markForCheck();
         }
@@ -118,15 +133,17 @@ export class HomeWatchlistComponent implements OnDestroy, OnInit {
       .fetchWatchlist()
       .pipe(takeUntil(this.unsubscribeSubject))
       .subscribe(({ watchlist }) => {
-        this.watchlist = watchlist.map(({ dataSource, symbol }) => ({
-          dataSource,
-          symbol,
-          marketCondition: null,
-          name: symbol,
-          performances: null,
-          trend50d: 'UNKNOWN',
-          trend200d: 'UNKNOWN'
-        }));
+        this.watchlist = watchlist.map(
+          ({ dataSource, marketCondition, name, performances, symbol }) => ({
+            dataSource,
+            marketCondition,
+            name,
+            performances,
+            symbol,
+            trend50d: 'UNKNOWN' as BenchmarkTrend,
+            trend200d: 'UNKNOWN' as BenchmarkTrend
+          })
+        );
 
         this.changeDetectorRef.markForCheck();
       });

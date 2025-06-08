@@ -20,9 +20,9 @@
           mat-flat-button
           [ngClass]="{
             'font-weight-bold':
-              currentRoute === 'home' || currentRoute === 'zen',
+              currentRoute === routes.home || currentRoute === routes.zen,
             'text-decoration-underline':
-              currentRoute === 'home' || currentRoute === 'zen'
+              currentRoute === routes.home || currentRoute === routes.zen
           }"
           [routerLink]="['/']"
           >Overview</a
@@ -34,10 +34,10 @@
           i18n
           mat-flat-button
           [ngClass]="{
-            'font-weight-bold': currentRoute === 'portfolio',
-            'text-decoration-underline': currentRoute === 'portfolio'
+            'font-weight-bold': currentRoute === routes.portfolio,
+            'text-decoration-underline': currentRoute === routes.portfolio
           }"
-          [routerLink]="['/portfolio']"
+          [routerLink]="routerLinkPortfolio"
           >Portfolio</a
         >
       </li>
@@ -47,10 +47,10 @@
           i18n
           mat-flat-button
           [ngClass]="{
-            'font-weight-bold': currentRoute === 'accounts',
-            'text-decoration-underline': currentRoute === 'accounts'
+            'font-weight-bold': currentRoute === routes.accounts,
+            'text-decoration-underline': currentRoute === routes.accounts
           }"
-          [routerLink]="['/accounts']"
+          [routerLink]="routerLinkAccounts"
           >Accounts</a
         >
       </li>
@@ -61,10 +61,10 @@
             i18n
             mat-flat-button
             [ngClass]="{
-              'font-weight-bold': currentRoute === 'admin',
-              'text-decoration-underline': currentRoute === 'admin'
+              'font-weight-bold': currentRoute === routes.adminControl,
+              'text-decoration-underline': currentRoute === routes.adminControl
             }"
-            [routerLink]="['/admin']"
+            [routerLink]="routerLinkAdminControl"
             >Admin Control</a
           >
         </li>
@@ -235,7 +235,7 @@
             mat-menu-item
             [ngClass]="{
               'font-weight-bold':
-                currentRoute === 'home' || currentRoute === 'zen'
+                currentRoute === routes.home || currentRoute === routes.zen
             }"
             [routerLink]="['/']"
             >Overview</a
@@ -245,24 +245,24 @@
             i18n
             mat-menu-item
             [ngClass]="{
-              'font-weight-bold': currentRoute === 'portfolio'
+              'font-weight-bold': currentRoute === routes.portfolio
             }"
-            [routerLink]="['/portfolio']"
+            [routerLink]="routerLinkPortfolio"
             >Portfolio</a
           >
           <a
             class="d-flex d-sm-none"
             i18n
             mat-menu-item
-            [ngClass]="{ 'font-weight-bold': currentRoute === 'accounts' }"
-            [routerLink]="['/accounts']"
+            [ngClass]="{ 'font-weight-bold': currentRoute === routes.accounts }"
+            [routerLink]="routerLinkAccounts"
             >Accounts</a
           >
           <a
             i18n
             mat-menu-item
-            [ngClass]="{ 'font-weight-bold': currentRoute === 'account' }"
-            [routerLink]="['/account']"
+            [ngClass]="{ 'font-weight-bold': currentRoute === routes.account }"
+            [routerLink]="routerLinkAccount"
             >My Ghostfolio</a
           >
           @if (hasPermissionToAccessAdminControl) {
@@ -270,8 +270,10 @@
               class="d-flex d-sm-none"
               i18n
               mat-menu-item
-              [ngClass]="{ 'font-weight-bold': currentRoute === 'admin' }"
-              [routerLink]="['/admin']"
+              [ngClass]="{
+                'font-weight-bold': currentRoute === routes.adminControl
+              }"
+              [routerLink]="routerLinkAdminControl"
               >Admin Control</a
             >
           }
@@ -312,7 +314,7 @@
             >About Ghostfolio</a
           >
           <hr class="d-flex d-sm-none m-0" />
-          <button mat-menu-item (click)="onSignOut()">Logout</button>
+          <button i18n mat-menu-item (click)="onSignOut()">Log out</button>
         </mat-menu>
       </li>
     </ul>
