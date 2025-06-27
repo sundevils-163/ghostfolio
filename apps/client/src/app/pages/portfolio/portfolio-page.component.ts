@@ -1,6 +1,6 @@
 import { UserService } from '@ghostfolio/client/services/user/user.service';
 import { TabConfiguration, User } from '@ghostfolio/common/interfaces';
-import { internalRoutes, routes } from '@ghostfolio/common/routes';
+import { internalRoutes } from '@ghostfolio/common/routes/routes';
 
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { DeviceDetectorService } from 'ngx-device-detector';
@@ -33,28 +33,30 @@ export class PortfolioPageComponent implements OnDestroy, OnInit {
           this.tabs = [
             {
               iconName: 'analytics-outline',
-              label: $localize`Analysis`,
-              path: internalRoutes.portfolio.routerLink
+              label: internalRoutes.portfolio.subRoutes.analysis.title,
+              routerLink: internalRoutes.portfolio.routerLink
             },
             {
               iconName: 'swap-vertical-outline',
               label: internalRoutes.portfolio.subRoutes.activities.title,
-              path: internalRoutes.portfolio.subRoutes.activities.routerLink
+              routerLink:
+                internalRoutes.portfolio.subRoutes.activities.routerLink
             },
             {
               iconName: 'pie-chart-outline',
-              label: $localize`Allocations`,
-              path: ['/' + internalRoutes.portfolio.path, routes.allocations]
+              label: internalRoutes.portfolio.subRoutes.allocations.title,
+              routerLink:
+                internalRoutes.portfolio.subRoutes.allocations.routerLink
             },
             {
               iconName: 'calculator-outline',
-              label: 'FIRE ',
-              path: ['/' + internalRoutes.portfolio.path, routes.fire]
+              label: internalRoutes.portfolio.subRoutes.fire.title,
+              routerLink: internalRoutes.portfolio.subRoutes.fire.routerLink
             },
             {
               iconName: 'scan-outline',
-              label: 'X-ray',
-              path: ['/' + internalRoutes.portfolio.path, routes.xRay]
+              label: internalRoutes.portfolio.subRoutes.xRay.title,
+              routerLink: internalRoutes.portfolio.subRoutes.xRay.routerLink
             }
           ];
           this.user = state.user;

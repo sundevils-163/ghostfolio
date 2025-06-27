@@ -10,7 +10,7 @@ import {
   User
 } from '@ghostfolio/common/interfaces';
 import { hasPermission, permissions } from '@ghostfolio/common/permissions';
-import { internalRoutes } from '@ghostfolio/common/routes';
+import { internalRoutes } from '@ghostfolio/common/routes/routes';
 import { OrderWithAccount } from '@ghostfolio/common/types';
 
 import {
@@ -174,7 +174,7 @@ export class AccountDetailDialog implements OnDestroy, OnInit {
           balance,
           currency,
           name,
-          Platform,
+          platform,
           transactionCount,
           value,
           valueInBaseCurrency
@@ -189,7 +189,7 @@ export class AccountDetailDialog implements OnDestroy, OnInit {
           }
 
           this.name = name;
-          this.platformName = Platform?.name ?? '-';
+          this.platformName = platform?.name ?? '-';
           this.transactionCount = transactionCount;
           this.valueInBaseCurrency = valueInBaseCurrency;
 

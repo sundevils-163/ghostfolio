@@ -197,7 +197,7 @@ export class ImportService {
             balances: {
               create: accountWithBalances.balances ?? []
             },
-            User: { connect: { id: user.id } }
+            user: { connect: { id: user.id } }
           };
 
           if (
@@ -207,7 +207,7 @@ export class ImportService {
           ) {
             accountObject = {
               ...accountObject,
-              Platform: { connect: { id: platformId } }
+              platform: { connect: { id: platformId } }
             };
           }
 
@@ -396,7 +396,7 @@ export class ImportService {
             }
           },
           updateAccountBalance: false,
-          User: { connect: { id: user.id } },
+          user: { connect: { id: user.id } },
           userId: user.id
         });
 

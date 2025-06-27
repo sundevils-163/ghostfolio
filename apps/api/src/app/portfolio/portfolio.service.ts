@@ -158,7 +158,10 @@ export class PortfolioService {
     const [accounts, details] = await Promise.all([
       this.accountService.accounts({
         where,
-        include: { activities: true, Platform: true },
+        include: {
+          activities: true,
+          platform: true
+        },
         orderBy: { name: 'asc' }
       }),
       this.getDetails({
@@ -1257,10 +1260,14 @@ export class PortfolioService {
               [
                 new AccountClusterRiskCurrentInvestment(
                   this.exchangeRateDataService,
+                  this.i18nService,
+                  userSettings.language,
                   accounts
                 ),
                 new AccountClusterRiskSingleAccount(
                   this.exchangeRateDataService,
+                  this.i18nService,
+                  userSettings.language,
                   accounts
                 )
               ],
@@ -1273,10 +1280,14 @@ export class PortfolioService {
               [
                 new AssetClassClusterRiskEquity(
                   this.exchangeRateDataService,
+                  this.i18nService,
+                  userSettings.language,
                   Object.values(holdings)
                 ),
                 new AssetClassClusterRiskFixedIncome(
                   this.exchangeRateDataService,
+                  this.i18nService,
+                  userSettings.language,
                   Object.values(holdings)
                 )
               ],
@@ -2105,14 +2116,14 @@ export class PortfolioService {
 
     let currentAccounts: (Account & {
       Order?: Order[];
-      Platform?: Platform;
+      platform?: Platform;
     })[] = [];
 
     if (filters.length === 0) {
       currentAccounts = await this.accountService.getAccounts(userId);
     } else if (filters.length === 1 && filters[0].type === 'ACCOUNT') {
       currentAccounts = await this.accountService.accounts({
-        include: { Platform: true },
+        include: { platform: true },
         where: { id: filters[0].id }
       });
     } else {
@@ -2129,7 +2140,7 @@ export class PortfolioService {
       );
 
       currentAccounts = await this.accountService.accounts({
-        include: { Platform: true },
+        include: { platform: true },
         where: { id: { in: accountIds } }
       });
     }
@@ -2154,18 +2165,18 @@ export class PortfolioService {
         )
       };
 
-      if (platforms[account.Platform?.id || UNKNOWN_KEY]?.valueInBaseCurrency) {
-        platforms[account.Platform?.id || UNKNOWN_KEY].valueInBaseCurrency +=
+      if (platforms[account.platformId || UNKNOWN_KEY]?.valueInBaseCurrency) {
+        platforms[account.platformId || UNKNOWN_KEY].valueInBaseCurrency +=
           this.exchangeRateDataService.toCurrency(
             account.balance,
             account.currency,
             userCurrency
           );
       } else {
-        platforms[account.Platform?.id || UNKNOWN_KEY] = {
+        platforms[account.platformId || UNKNOWN_KEY] = {
           balance: account.balance,
           currency: account.currency,
-          name: account.Platform?.name,
+          name: account.platform?.name,
           valueInBaseCurrency: this.exchangeRateDataService.toCurrency(
             account.balance,
             account.currency,
@@ -2199,15 +2210,15 @@ export class PortfolioService {
         }
 
         if (
-          platforms[Account?.Platform?.id || UNKNOWN_KEY]?.valueInBaseCurrency
+          platforms[Account?.platformId || UNKNOWN_KEY]?.valueInBaseCurrency
         ) {
-          platforms[Account?.Platform?.id || UNKNOWN_KEY].valueInBaseCurrency +=
+          platforms[Account?.platformId || UNKNOWN_KEY].valueInBaseCurrency +=
             currentValueOfSymbolInBaseCurrency;
         } else {
-          platforms[Account?.Platform?.id || UNKNOWN_KEY] = {
+          platforms[Account?.platformId || UNKNOWN_KEY] = {
             balance: 0,
             currency: Account?.currency,
-            name: account.Platform?.name,
+            name: account.platform?.name,
             valueInBaseCurrency: currentValueOfSymbolInBaseCurrency
           };
         }
