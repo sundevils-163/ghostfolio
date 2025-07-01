@@ -5,18 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.176.0 - 2025-06-30
+
+### Added
+
+- Added support for generating a new _Security Token_ via the user’s account access panel
+
+### Changed
+
+- Moved the main content of the holding detail dialog to a new overview tab
+- Introduced fuzzy search for the holdings of the assistant
+- Introduced fuzzy search for the quick links of the assistant
+- Improved the search results of the assistant to only display categories with content
+- Enhanced the sitemap to dynamically compose public routes
+- Renamed `Account` to `account` in the `Order` database schema
+- Improved the language localization for German (`de`)
+- Upgraded `prettier` from version `3.5.3` to `3.6.2`
+
+## 2.175.0 - 2025-06-28
 
 ### Added
 
 - Set up the language localization for the static portfolio analysis rule: _Asset Class Cluster Risks_ (Equity)
 - Set up the language localization for the static portfolio analysis rule: _Asset Class Cluster Risks_ (Fixed Income)
+- Set up the language localization for the static portfolio analysis rule: _Currency Cluster Risks_ (Investment)
+- Set up the language localization for the static portfolio analysis rule: _Currency Cluster Risks_ (Investment: Base Currency)
 
 ### Changed
 
+- Extended the selector handling of the scraper configuration for more use cases
+- Extended the _AI_ service by an access to _OpenRouter_ (experimental)
 - Changed `node main` to `exec node main` in the `entrypoint.sh` file to improve the container signal handling
+- Renamed `Account` to `account` in the `AccountBalance` database schema
 - Improved the language localization for Catalan (`ca`)
+- Improved the language localization for Dutch (`nl`)
 - Improved the language localization for Español (`es`)
+- Improved the language localization for German (`de`)
 - Improved the language localization for Turkish (`tr`)
 
 ### Fixed
@@ -6101,7 +6125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed the navigation to always show the portfolio page
 - Migrated the data type of currencies from `enum` to `string` in the database
 - Supported unlimited currencies (instead of `CHF`, `EUR`, `GBP` and `USD`)
-- Respected the accounts' currencies in the exchange rate service
+- Respected the accounts’ currencies in the exchange rate service
 
 ### Fixed
 
