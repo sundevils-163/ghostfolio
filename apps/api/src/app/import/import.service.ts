@@ -159,7 +159,7 @@ export class ImportService {
     user: UserWithSettings;
   }): Promise<Activity[]> {
     const accountIdMapping: { [oldAccountId: string]: string } = {};
-    const userCurrency = user.Settings.settings.baseCurrency;
+    const userCurrency = user.settings.settings.baseCurrency;
 
     if (!isDryRun && accountsWithBalancesDto?.length) {
       const [existingAccounts, existingPlatforms] = await Promise.all([
@@ -232,7 +232,7 @@ export class ImportService {
 
     for (const activity of activitiesDto) {
       if (!activity.dataSource) {
-        if (['FEE', 'INTEREST', 'ITEM', 'LIABILITY'].includes(activity.type)) {
+        if (['FEE', 'INTEREST', 'LIABILITY'].includes(activity.type)) {
           activity.dataSource = DataSource.MANUAL;
         } else {
           activity.dataSource =
@@ -564,6 +564,12 @@ export class ImportService {
       index,
       { currency, dataSource, symbol, type }
     ] of activitiesDto.entries()) {
+      if (type === 'ITEM') {
+        throw new Error(
+          `activities.${index}.type ("${type}") is deprecated, please use "BUY" instead`
+        );
+      }
+
       if (!dataSources.includes(dataSource)) {
         throw new Error(
           `activities.${index}.dataSource ("${dataSource}") is not valid`
@@ -595,7 +601,11 @@ export class ImportService {
           )?.[symbol]
         };
 
-        if (type === 'BUY' || type === 'DIVIDEND' || type === 'SELL') {
+        if (
+          (dataSource !== 'MANUAL' && type === 'BUY') ||
+          type === 'DIVIDEND' ||
+          type === 'SELL'
+        ) {
           if (!assetProfile?.name) {
             throw new Error(
               `activities.${index}.symbol ("${symbol}") is not valid for the specified data source ("${dataSource}")`
