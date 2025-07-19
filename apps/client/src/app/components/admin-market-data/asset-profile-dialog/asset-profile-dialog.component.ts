@@ -5,7 +5,11 @@ import { AdminService } from '@ghostfolio/client/services/admin.service';
 import { DataService } from '@ghostfolio/client/services/data.service';
 import { UserService } from '@ghostfolio/client/services/user/user.service';
 import { validateObjectForForm } from '@ghostfolio/client/util/form.util';
-import { ghostfolioScraperApiSymbolPrefix } from '@ghostfolio/common/config';
+import {
+  ASSET_CLASS_MAPPING,
+  ghostfolioScraperApiSymbolPrefix,
+  PROPERTY_IS_DATA_GATHERING_ENABLED
+} from '@ghostfolio/common/config';
 import { DATE_FORMAT } from '@ghostfolio/common/helper';
 import {
   AdminMarketDataDetails,
@@ -45,6 +49,7 @@ import {
   Prisma,
   SymbolProfile
 } from '@prisma/client';
+import { isUUID } from 'class-validator';
 import { format } from 'date-fns';
 import { StatusCodes } from 'http-status-codes';
 import { addIcons } from 'ionicons';
@@ -53,7 +58,10 @@ import ms from 'ms';
 import { EMPTY, Subject } from 'rxjs';
 import { catchError, takeUntil } from 'rxjs/operators';
 
-import { AssetProfileDialogParams } from './interfaces/interfaces';
+import {
+  AssetClassSelectorOption,
+  AssetProfileDialogParams
+} from './interfaces/interfaces';
 
 @Component({
   host: { class: 'd-flex flex-column h-100' },
@@ -72,15 +80,18 @@ export class AssetProfileDialog implements OnDestroy, OnInit {
   @ViewChild('assetProfileFormElement')
   assetProfileFormElement: ElementRef<HTMLFormElement>;
 
-  public assetProfileClass: string;
+  public assetClassLabel: string;
+  public assetSubClassLabel: string;
 
-  public assetClasses = Object.keys(AssetClass).map((assetClass) => {
-    return { id: assetClass, label: translate(assetClass) };
-  });
+  public assetClassOptions: AssetClassSelectorOption[] = Object.keys(AssetClass)
+    .map((id) => {
+      return { id, label: translate(id) } as AssetClassSelectorOption;
+    })
+    .sort((a, b) => {
+      return a.label.localeCompare(b.label);
+    });
 
-  public assetSubClasses = Object.keys(AssetSubClass).map((assetSubClass) => {
-    return { id: assetSubClass, label: translate(assetSubClass) };
-  });
+  public assetSubClassOptions: AssetClassSelectorOption[] = [];
 
   public assetProfile: AdminMarketDataDetails['assetProfile'];
 
@@ -122,7 +133,6 @@ export class AssetProfileDialog implements OnDestroy, OnInit {
     }
   );
 
-  public assetProfileSubClass: string;
   public benchmarks: Partial<SymbolProfile>[];
 
   public countries: {
@@ -133,7 +143,9 @@ export class AssetProfileDialog implements OnDestroy, OnInit {
   public ghostfolioScraperApiSymbolPrefix = ghostfolioScraperApiSymbolPrefix;
   public historicalDataItems: LineChartItem[];
   public isBenchmark = false;
+  public isDataGatheringEnabled: boolean;
   public isEditAssetProfileIdentifierMode = false;
+  public isUUID = isUUID;
   public marketDataItems: MarketData[] = [];
 
   public modeValues = [
@@ -196,12 +208,42 @@ export class AssetProfileDialog implements OnDestroy, OnInit {
   public initialize() {
     this.historicalDataItems = undefined;
 
+    this.adminService
+      .fetchAdminData()
+      .pipe(takeUntil(this.unsubscribeSubject))
+      .subscribe(({ settings }) => {
+        this.isDataGatheringEnabled =
+          settings[PROPERTY_IS_DATA_GATHERING_ENABLED] === false ? false : true;
+
+        this.changeDetectorRef.markForCheck();
+      });
+
     this.userService.stateChanged
       .pipe(takeUntil(this.unsubscribeSubject))
       .subscribe((state) => {
         if (state?.user) {
           this.user = state.user;
         }
+      });
+
+    this.assetProfileForm
+      .get('assetClass')
+      .valueChanges.pipe(takeUntil(this.unsubscribeSubject))
+      .subscribe((assetClass) => {
+        const assetSubClasses = ASSET_CLASS_MAPPING.get(assetClass) ?? [];
+
+        this.assetSubClassOptions = assetSubClasses
+          .map((assetSubClass) => {
+            return {
+              id: assetSubClass,
+              label: translate(assetSubClass)
+            };
+          })
+          .sort((a, b) => a.label.localeCompare(b.label));
+
+        this.assetProfileForm.get('assetSubClass').setValue(null);
+
+        this.changeDetectorRef.markForCheck();
       });
 
     this.dataService
@@ -213,8 +255,8 @@ export class AssetProfileDialog implements OnDestroy, OnInit {
       .subscribe(({ assetProfile, marketData }) => {
         this.assetProfile = assetProfile;
 
-        this.assetProfileClass = translate(this.assetProfile?.assetClass);
-        this.assetProfileSubClass = translate(this.assetProfile?.assetSubClass);
+        this.assetClassLabel = translate(this.assetProfile?.assetClass);
+        this.assetSubClassLabel = translate(this.assetProfile?.assetSubClass);
         this.countries = {};
 
         this.isBenchmark = this.benchmarks.some(({ id }) => {

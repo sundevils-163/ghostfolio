@@ -5,6 +5,66 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Set up the language localization for the static portfolio analysis rule: _Economic Market Cluster Risks_ (Developed Markets)
+- Set up the language localization for the static portfolio analysis rule: _Economic Market Cluster Risks_ (Emerging Markets)
+
+### Changed
+
+- Improved the platform icon in the create or update platform dialog of the admin control
+- Localized the durations of the coupon system
+- Improved the language localization for Catalan (`ca`)
+- Improved the language localization for Dutch (`nl`)
+- Improved the language localization for Italian (`it`)
+- Improved the language localization for Portuguese (`pt`)
+- Improved the language localization for Spanish (`es`)
+
+## 2.182.0 - 2025-07-16
+
+### Added
+
+- Added a message to the assistant if no results have been found
+- Added the category title to the settings dialog to customize the rule thresholds of the _X-ray_ page (experimental)
+
+### Changed
+
+- Improved the label for asset profiles with `MANUAL` data source in the chart of the asset profile details dialog in the admin control panel
+- Improved the label for asset profiles with `MANUAL` data source in the chart of the holding detail dialog
+- Skipped errors for the custom asset profiles in the portfolio snapshot calculation
+- Removed the date range query parameter from the search for the holdings in the assistant
+- Improved the language localization for Chinese (`zh`)
+- Improved the language localization for Dutch (`nl`)
+- Improved the language localization for French (`fr`)
+- Improved the language localization for German (`de`)
+- Improved the language localization for Portuguese (`pt`)
+- Improved the language localization for Spanish (`es`)
+
+### Fixed
+
+- Fixed an issue with the clone functionality related to a custom asset profile activity
+
+## 2.181.0 - 2025-07-11
+
+### Changed
+
+- Improved the portfolio calculations for activities without historical market data
+- Improved the asset profile dialog’s asset sub class selector of the admin control panel to update the options dynamically based on the selected asset class
+- Improved the asset profile dialog’s data gathering checkbox of the admin control panel to reflect the global settings
+- Improved the language localization for Catalan (`ca`)
+- Improved the language localization for Chinese (`zh`)
+- Improved the language localization for German (`de`)
+- Improved the language localization for Italian (`it`)
+- Improved the language localization for Portuguese (`pt`)
+- Improved the language localization for Spanish (`es`)
+- Improved the language localization for Turkish (`tr`)
+
+### Fixed
+
+- Fixed an issue in the biometric authentication related to matching passkeys
+
 ## 2.180.0 - 2025-07-08
 
 ### Added
