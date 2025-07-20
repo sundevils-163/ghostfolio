@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.183.0 - 2025-07-20
 
 ### Added
 
@@ -14,13 +14,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Extended the export functionality by custom asset profiles
 - Improved the platform icon in the create or update platform dialog of the admin control
 - Localized the durations of the coupon system
+- Refactored the admin pages to standalone
+- Refactored the Frequently Asked Questions (FAQ) pages to standalone
+- Refactored the home pages to standalone
+- Refactored the resources pages to standalone
+- Refactored the access table component to standalone
+- Refactored the accounts table component to standalone
 - Improved the language localization for Catalan (`ca`)
 - Improved the language localization for Dutch (`nl`)
+- Improved the language localization for German (`de`)
 - Improved the language localization for Italian (`it`)
 - Improved the language localization for Portuguese (`pt`)
 - Improved the language localization for Spanish (`es`)
+
+### Fixed
+
+- Fixed the horizontal ellipsis icon in the accounts table component
+- Fixed the quantity value in the update activity dialog
+- Fixed the static portfolio analysis rule for no accounts: _Account Cluster Risks_ (Current Investment)
+- Fixed the static portfolio analysis rule for no accounts: _Account Cluster Risks_ (Single Account)
 
 ## 2.182.0 - 2025-07-16
 
