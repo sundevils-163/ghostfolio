@@ -1,4 +1,3 @@
-import { GfToggleModule } from '@ghostfolio/client/components/toggle/toggle.module';
 import { DataService } from '@ghostfolio/client/services/data.service';
 import { ImpersonationStorageService } from '@ghostfolio/client/services/impersonation-storage.service';
 import { UserService } from '@ghostfolio/client/services/user/user.service';
@@ -12,6 +11,7 @@ import { hasPermission, permissions } from '@ghostfolio/common/permissions';
 import { internalRoutes } from '@ghostfolio/common/routes/routes';
 import { HoldingType, HoldingsViewMode } from '@ghostfolio/common/types';
 import { GfHoldingsTableComponent } from '@ghostfolio/ui/holdings-table';
+import { GfToggleComponent } from '@ghostfolio/ui/toggle';
 import { GfTreemapChartComponent } from '@ghostfolio/ui/treemap-chart';
 
 import { CommonModule } from '@angular/common';
@@ -38,7 +38,7 @@ import { takeUntil } from 'rxjs/operators';
     CommonModule,
     FormsModule,
     GfHoldingsTableComponent,
-    GfToggleModule,
+    GfToggleComponent,
     GfTreemapChartComponent,
     IonIcon,
     MatButtonModule,
@@ -57,7 +57,7 @@ export class GfHomeHoldingsComponent implements OnDestroy, OnInit {
   public deviceType: string;
   public hasImpersonationId: boolean;
   public hasPermissionToAccessHoldingsChart: boolean;
-  public hasPermissionToCreateOrder: boolean;
+  public hasPermissionToCreateActivity: boolean;
   public holdings: PortfolioPosition[];
   public holdingType: HoldingType = 'ACTIVE';
   public holdingTypeOptions: ToggleOption[] = [
@@ -105,7 +105,7 @@ export class GfHomeHoldingsComponent implements OnDestroy, OnInit {
             permissions.accessHoldingsChart
           );
 
-          this.hasPermissionToCreateOrder = hasPermission(
+          this.hasPermissionToCreateActivity = hasPermission(
             this.user.permissions,
             permissions.createOrder
           );

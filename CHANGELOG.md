@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.185.0 - 2025-07-26
+
+### Added
+
+- Added a _Storybook_ story for the activity type component
+- Added a _Storybook_ story for the toggle component
+
+### Changed
+
+- Extended the import functionality by custom asset profiles
+- Migrated the get country and sector weightings, dividends, ETF holdings, ETF info, historical price, profile, quote and symbol search functionalities of the _Financial Modeling Prep_ service to its stable API version
+- Refactored the toggle component to standalone
+- Improved the language localization for Dutch (`nl`)
+- Improved the language localization for Portuguese (`pt`)
+- Improved the language localization for Turkish (`tr`)
+- Upgraded the _Stripe_ dependencies
+- Upgraded `angular` from version `19.2.1` to `20.0.7`
+- Upgraded `ngx-device-detector` from version `9.0.0` to `10.0.2`
+- Upgraded `ngx-markdown` from version `19.0.0` to `20.0.0`
+- Upgraded `ngx-stripe` from version `19.7.0` to `20.7.0`
+- Upgraded `Nx` from version `21.1.2` to `21.2.4`
+- Upgraded `storybook` from version `8.6.12` to `9.0.17`
+
+### Fixed
+
+- Fixed the date format of the retirement date in the _FIRE_ calculator
+- Fixed an issue with the permissions of the impersonation mode related to the onboarding on the overview tab of the home page
+- Fixed an issue with the permissions of the impersonation mode related to the manage activities button of the holdings tab on the home page
+- Fixed an issue with the currency detection related to `USD.AX` in the _Yahoo Finance_ service
+
+## 2.184.0 - 2025-07-22
+
+### Added
+
+- Set up the language localization for the static portfolio analysis rule: _Regional Market Cluster Risks_ (Asia-Pacific)
+- Set up the language localization for the static portfolio analysis rule: _Regional Market Cluster Risks_ (Emerging Markets)
+- Set up the language localization for the static portfolio analysis rule: _Regional Market Cluster Risks_ (Europe)
+- Set up the language localization for the static portfolio analysis rule: _Regional Market Cluster Risks_ (Japan)
+- Set up the language localization for the static portfolio analysis rule: _Regional Market Cluster Risks_ (North America)
+
+### Changed
+
+- Localized the tooltips of the about page
+- Improved the language localization for Catalan (`ca`)
+- Improved the language localization for Dutch (`nl`)
+- Improved the language localization for German (`de`)
+- Improved the language localization for Spanish (`es`)
+- Upgraded `countries-and-timezones` from version `3.7.2` to `3.8.0`
+- Upgraded `prisma` from version `6.11.1` to `6.12.0`
+
+### Fixed
+
+- Fixed an issue with the landing page related to the public page routes of the `AuthGuard`
+
 ## 2.183.0 - 2025-07-20
 
 ### Added
