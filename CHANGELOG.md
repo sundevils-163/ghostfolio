@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- Added the allocation column to the accounts table component of the holding detail dialog
+
+### Changed
+
+- Improved the usability of the toggle component
+- Restructured the response of the portfolio report endpoint (_X-ray_)
+- Refreshed the cryptocurrencies list
+- Improved the language localization for Catalan (`ca`)
+- Improved the language localization for Chinese (`zh`)
+- Improved the language localization for Dutch (`nl`)
+- Improved the language localization for German (`de`)
+- Improved the language localization for Spanish (`es`)
+- Upgraded `ng-extract-i18n-merge` from version `2.15.1` to `3.0.0`
+
+### Fixed
+
+- Excluded the holdings originated of `FEE`, `INTEREST` and `LIABILITY` activities from the closed holdings on the portfolio holdings page
+- Fixed an issue with serving _Storybook_ related to missing styles
+
 ## 2.185.0 - 2025-07-26
 
 ### Added

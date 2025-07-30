@@ -191,6 +191,7 @@ export class PortfolioService {
         ...account,
         transactionCount,
         valueInBaseCurrency,
+        allocationInPercentage: null, // TODO
         balanceInBaseCurrency: this.exchangeRateDataService.toCurrency(
           account.balance,
           account.currency,
@@ -1156,7 +1157,7 @@ export class PortfolioService {
       })
     ).toNumber();
 
-    const rules: PortfolioReportResponse['rules'] = {
+    const rules: PortfolioReportResponse['xRay']['rules'] = {
       accountClusterRisk:
         summary.activityCount > 0
           ? await this.rulesService.evaluate(
@@ -1311,7 +1312,12 @@ export class PortfolioService {
           : undefined
     };
 
-    return { rules, statistics: this.getReportStatistics(rules) };
+    return {
+      xRay: {
+        rules,
+        statistics: this.getReportStatistics(rules)
+      }
+    };
   }
 
   public async updateTags({
@@ -1731,8 +1737,8 @@ export class PortfolioService {
   }
 
   private getReportStatistics(
-    evaluatedRules: PortfolioReportResponse['rules']
-  ): PortfolioReportResponse['statistics'] {
+    evaluatedRules: PortfolioReportResponse['xRay']['rules']
+  ): PortfolioReportResponse['xRay']['statistics'] {
     const rulesActiveCount = Object.values(evaluatedRules)
       .flat()
       .filter((rule) => {
