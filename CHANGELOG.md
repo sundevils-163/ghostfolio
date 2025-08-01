@@ -7,13 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Improved the balance of headings on the landing page
+- Improved the language localization for Spanish (`es`)
+- Upgraded `angular` from version `20.0.7` to `20.1.3`
+- Upgraded `Nx` from version `21.2.4` to `21.3.9`
+
+## 2.186.0 - 2025-07-30
+
 ### Added
 
 - Added the allocation column to the accounts table component of the holding detail dialog
 
 ### Changed
 
+- Improved the _Top 3_ and _Bottom 3_ performers on the analysis page by removing items without performance
 - Improved the usability of the toggle component
+- Simplified the users table of the admin control panel
 - Restructured the response of the portfolio report endpoint (_X-ray_)
 - Refreshed the cryptocurrencies list
 - Improved the language localization for Catalan (`ca`)
@@ -25,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed the links of the _Top 3_ and _Bottom 3_ performers on the analysis page
 - Excluded the holdings originated of `FEE`, `INTEREST` and `LIABILITY` activities from the closed holdings on the portfolio holdings page
 - Fixed an issue with serving _Storybook_ related to missing styles
 
