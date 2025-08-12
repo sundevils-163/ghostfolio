@@ -9,7 +9,8 @@ import {
   DATA_GATHERING_QUEUE_PRIORITY_HIGH,
   GATHER_ASSET_PROFILE_PROCESS_JOB_NAME,
   GATHER_ASSET_PROFILE_PROCESS_JOB_OPTIONS,
-  ghostfolioPrefix
+  ghostfolioPrefix,
+  TAG_ID_EXCLUDE_FROM_ANALYSIS
 } from '@ghostfolio/common/config';
 import { getAssetProfileIdentifier } from '@ghostfolio/common/helper';
 import {
@@ -96,7 +97,7 @@ export class OrderService {
       assetSubClass?: AssetSubClass;
       currency?: string;
       symbol?: string;
-      tags?: Tag[];
+      tags?: { id: string }[];
       updateAccountBalance?: boolean;
       userId: string;
     }
@@ -200,9 +201,7 @@ export class OrderService {
         account,
         isDraft,
         tags: {
-          connect: tags.map(({ id }) => {
-            return { id };
-          })
+          connect: tags
         }
       },
       include: { SymbolProfile: true }
@@ -275,7 +274,7 @@ export class OrderService {
       userId,
       includeDrafts: true,
       userCurrency: undefined,
-      withExcludedAccounts: true
+      withExcludedAccountsAndActivities: true
     });
 
     const { count } = await this.prismaService.order.deleteMany({
@@ -332,7 +331,7 @@ export class OrderService {
     types,
     userCurrency,
     userId,
-    withExcludedAccounts = false
+    withExcludedAccountsAndActivities = false
   }: {
     endDate?: Date;
     filters?: Filter[];
@@ -345,7 +344,7 @@ export class OrderService {
     types?: ActivityType[];
     userCurrency: string;
     userId: string;
-    withExcludedAccounts?: boolean;
+    withExcludedAccountsAndActivities?: boolean;
   }): Promise<Activities> {
     let orderBy: Prisma.Enumerable<Prisma.OrderOrderByWithRelationInput> = [
       { date: 'asc' },
@@ -491,11 +490,18 @@ export class OrderService {
       where.type = { in: types };
     }
 
-    if (withExcludedAccounts === false) {
+    if (withExcludedAccountsAndActivities === false) {
       where.OR = [
         { account: null },
         { account: { NOT: { isExcluded: true } } }
       ];
+
+      where.tags = {
+        ...where.tags,
+        none: {
+          id: TAG_ID_EXCLUDE_FROM_ANALYSIS
+        }
+      };
     }
 
     const [orders, count] = await Promise.all([
@@ -609,7 +615,7 @@ export class OrderService {
       filters,
       userCurrency,
       userId,
-      withExcludedAccounts: false // TODO
+      withExcludedAccountsAndActivities: false // TODO
     });
   }
 
@@ -650,7 +656,7 @@ export class OrderService {
       assetSubClass?: AssetSubClass;
       currency?: string;
       symbol?: string;
-      tags?: Tag[];
+      tags?: { id: string }[];
       type?: ActivityType;
     };
     where: Prisma.OrderWhereUniqueInput;
@@ -712,9 +718,7 @@ export class OrderService {
         ...data,
         isDraft,
         tags: {
-          connect: tags.map(({ id }) => {
-            return { id };
-          })
+          connect: tags
         }
       }
     });
