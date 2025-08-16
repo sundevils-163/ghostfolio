@@ -15,6 +15,7 @@ import { EconomicMarketClusterRiskDevelopedMarkets } from '@ghostfolio/api/model
 import { EconomicMarketClusterRiskEmergingMarkets } from '@ghostfolio/api/models/rules/economic-market-cluster-risk/emerging-markets';
 import { EmergencyFundSetup } from '@ghostfolio/api/models/rules/emergency-fund/emergency-fund-setup';
 import { FeeRatioInitialInvestment } from '@ghostfolio/api/models/rules/fees/fee-ratio-initial-investment';
+import { BuyingPower } from '@ghostfolio/api/models/rules/liquidity/buying-power';
 import { RegionalMarketClusterRiskAsiaPacific } from '@ghostfolio/api/models/rules/regional-market-cluster-risk/asia-pacific';
 import { RegionalMarketClusterRiskEmergingMarkets } from '@ghostfolio/api/models/rules/regional-market-cluster-risk/emerging-markets';
 import { RegionalMarketClusterRiskEurope } from '@ghostfolio/api/models/rules/regional-market-cluster-risk/europe';
@@ -226,7 +227,7 @@ export class PortfolioService {
           interestInBaseCurrency,
           transactionCount,
           valueInBaseCurrency,
-          allocationInPercentage: null, // TODO
+          allocationInPercentage: 0,
           balanceInBaseCurrency: this.exchangeRateDataService.toCurrency(
             account.balance,
             account.currency,
@@ -296,6 +297,15 @@ export class PortfolioService {
         account.valueInBaseCurrency
       );
       transactionCount += account.transactionCount;
+    }
+
+    for (const account of accounts) {
+      account.allocationInPercentage =
+        totalValueInBaseCurrency.toNumber() > Number.EPSILON
+          ? Big(account.valueInBaseCurrency)
+              .div(totalValueInBaseCurrency)
+              .toNumber()
+          : 0;
     }
 
     return {
@@ -1327,6 +1337,17 @@ export class PortfolioService {
             userSettings.language,
             summary.committedFunds,
             summary.fees
+          )
+        ],
+        userSettings
+      ),
+      liquidity: await this.rulesService.evaluate(
+        [
+          new BuyingPower(
+            this.exchangeRateDataService,
+            this.i18nService,
+            summary.cash,
+            userSettings.language
           )
         ],
         userSettings
