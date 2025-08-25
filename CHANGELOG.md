@@ -7,14 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Refactored the dialog footer component to standalone
+- Refactored the dialog header component to standalone
+- Refactored the landing page to standalone
+- Refactored the register page to standalone
+- Migrated the login with access token dialog from `ngModel` to form control
+- Upgraded `@ionic/angular` from version `8.6.3` to `8.7.3`
+- Upgraded `ionicons` from version `8.0.10` to `8.0.13`
+- Upgraded `prisma` from version `6.12.0` to `6.14.0`
+
+## 2.193.0 - 2025-08-22
+
+### Added
+
+- Added a filter by data source for the asset profiles in the admin control panel
+- Extended the data providers management of the admin control panel by every data provider in use
+
+### Changed
+
+- Improved the error handling in data providers
+- Upgraded `yahoo-finance2` from version `3.4.1` to `3.6.4`
+
+## 2.192.0 - 2025-08-21
+
 ### Added
 
 - Included accounts in the search results of the assistant
 - Included the data source in the asset profile search results of the assistant
+- Added the quantity column to the holdings table of the account detail dialog
 
 ### Changed
 
 - Migrated the prompt dialog component from `ngModel` to form control
+- Refreshed the cryptocurrencies list
+- Improved the language localization for German (`de`)
 
 ## 2.191.1 - 2025-08-14
 
