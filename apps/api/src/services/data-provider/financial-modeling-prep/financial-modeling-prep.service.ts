@@ -64,7 +64,7 @@ export class FinancialModelingPrepService implements DataProviderInterface {
     requestTimeout = this.configurationService.get('REQUEST_TIMEOUT'),
     symbol
   }: GetAssetProfileParams): Promise<Partial<SymbolProfile>> {
-    const response: Partial<SymbolProfile> = {
+    let response: Partial<SymbolProfile> = {
       symbol,
       dataSource: this.getName()
     };
@@ -201,6 +201,7 @@ export class FinancialModelingPrepService implements DataProviderInterface {
       }
     } catch (error) {
       let message = error;
+      response = undefined;
 
       if (['AbortError', 'TimeoutError'].includes(error?.name)) {
         message = `RequestError: The operation to get the asset profile for ${symbol} was aborted because the request to the data provider took more than ${(
@@ -364,8 +365,13 @@ export class FinancialModelingPrepService implements DataProviderInterface {
 
       await Promise.all(
         quotes.map(({ symbol }) => {
-          return this.getAssetProfile({ symbol }).then(({ currency }) => {
-            currencyBySymbolMap[symbol] = { currency };
+          return this.getAssetProfile({
+            requestTimeout,
+            symbol
+          }).then((assetProfile) => {
+            if (assetProfile?.currency) {
+              currencyBySymbolMap[symbol] = { currency: assetProfile.currency };
+            }
           });
         })
       );
@@ -410,7 +416,10 @@ export class FinancialModelingPrepService implements DataProviderInterface {
     return 'AAPL';
   }
 
-  public async search({ query }: GetSearchParams): Promise<LookupResponse> {
+  public async search({
+    query,
+    requestTimeout = this.configurationService.get('REQUEST_TIMEOUT')
+  }: GetSearchParams): Promise<LookupResponse> {
     const assetProfileBySymbolMap: {
       [symbol: string]: Partial<SymbolProfile>;
     } = {};
@@ -421,9 +430,7 @@ export class FinancialModelingPrepService implements DataProviderInterface {
         const result = await fetch(
           `${this.getUrl({ version: 'stable' })}/search-isin?isin=${query.toUpperCase()}&apikey=${this.apiKey}`,
           {
-            signal: AbortSignal.timeout(
-              this.configurationService.get('REQUEST_TIMEOUT')
-            )
+            signal: AbortSignal.timeout(requestTimeout)
           }
         ).then((res) => res.json());
 
