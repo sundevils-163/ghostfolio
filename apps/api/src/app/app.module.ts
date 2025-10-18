@@ -21,7 +21,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { StatusCodes } from 'http-status-codes';
-import { join } from 'path';
+import { join } from 'node:path';
 
 import { AccessModule } from './access/access.module';
 import { AccountModule } from './account/account.module';
@@ -71,9 +71,10 @@ import { UserModule } from './user/user.module';
     BullModule.forRoot({
       redis: {
         db: parseInt(process.env.REDIS_DB ?? '0', 10),
+        family: 0,
         host: process.env.REDIS_HOST,
-        port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
-        password: process.env.REDIS_PASSWORD
+        password: process.env.REDIS_PASSWORD,
+        port: parseInt(process.env.REDIS_PORT ?? '6379', 10)
       }
     }),
     CacheModule,

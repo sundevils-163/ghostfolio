@@ -1,11 +1,11 @@
-import { AuthGuard } from '@ghostfolio/client/core/auth.guard';
-import { PageTitleStrategy } from '@ghostfolio/client/services/page-title.strategy';
 import { publicRoutes, internalRoutes } from '@ghostfolio/common/routes/routes';
 
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes, TitleStrategy } from '@angular/router';
 
+import { AuthGuard } from './core/auth.guard';
 import { ModulePreloadService } from './core/module-preload.service';
+import { PageTitleStrategy } from './services/page-title.strategy';
 
 const routes: Routes = [
   {
@@ -42,13 +42,13 @@ const routes: Routes = [
   {
     path: internalRoutes.auth.path,
     loadChildren: () =>
-      import('./pages/auth/auth-page.module').then((m) => m.AuthPageModule),
+      import('./pages/auth/auth-page.routes').then((m) => m.routes),
     title: internalRoutes.auth.title
   },
   {
     path: publicRoutes.blog.path,
     loadChildren: () =>
-      import('./pages/blog/blog-page.module').then((m) => m.BlogPageModule)
+      import('./pages/blog/blog-page.routes').then((m) => m.routes)
   },
   {
     canActivate: [AuthGuard],
@@ -89,14 +89,12 @@ const routes: Routes = [
   {
     path: publicRoutes.markets.path,
     loadChildren: () =>
-      import('./pages/markets/markets-page.module').then(
-        (m) => m.MarketsPageModule
-      )
+      import('./pages/markets/markets-page.routes').then((m) => m.routes)
   },
   {
     path: publicRoutes.openStartup.path,
     loadChildren: () =>
-      import('./pages/open/open-page.module').then((m) => m.OpenPageModule)
+      import('./pages/open/open-page.routes').then((m) => m.routes)
   },
   {
     path: internalRoutes.portfolio.path,
@@ -157,8 +155,9 @@ const routes: Routes = [
       // Preload all lazy loaded modules with the attribute preload === true
       {
         anchorScrolling: 'enabled',
-        preloadingStrategy: ModulePreloadService
-        // enableTracing: true // <-- debugging purposes only
+        // enableTracing: true, // <-- debugging purposes only
+        preloadingStrategy: ModulePreloadService,
+        scrollPositionRestoration: 'top'
       }
     )
   ],
