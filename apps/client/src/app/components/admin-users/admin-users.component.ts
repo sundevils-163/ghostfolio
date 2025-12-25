@@ -1,5 +1,12 @@
+import { UserDetailDialogParams } from '@ghostfolio/client/components/user-detail-dialog/interfaces/interfaces';
+import { GfUserDetailDialogComponent } from '@ghostfolio/client/components/user-detail-dialog/user-detail-dialog.component';
+import { AdminService } from '@ghostfolio/client/services/admin.service';
+import { DataService } from '@ghostfolio/client/services/data.service';
+import { ImpersonationStorageService } from '@ghostfolio/client/services/impersonation-storage.service';
 import { TokenStorageService } from '@ghostfolio/client/services/token-storage.service';
+import { UserService } from '@ghostfolio/client/services/user/user.service';
 import { DEFAULT_PAGE_SIZE } from '@ghostfolio/common/config';
+import { ConfirmationDialogType } from '@ghostfolio/common/enums';
 import {
   getDateFnsLocale,
   getDateFormatString,
@@ -11,6 +18,7 @@ import {
   User
 } from '@ghostfolio/common/interfaces';
 import { hasPermission, permissions } from '@ghostfolio/common/permissions';
+import { NotificationService } from '@ghostfolio/ui/notifications';
 import { GfPremiumIndicatorComponent } from '@ghostfolio/ui/premium-indicator';
 import { GfValueComponent } from '@ghostfolio/ui/value';
 
@@ -50,15 +58,6 @@ import { DeviceDetectorService } from 'ngx-device-detector';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-
-import { ConfirmationDialogType } from '../../core/notification/confirmation-dialog/confirmation-dialog.type';
-import { NotificationService } from '../../core/notification/notification.service';
-import { AdminService } from '../../services/admin.service';
-import { DataService } from '../../services/data.service';
-import { ImpersonationStorageService } from '../../services/impersonation-storage.service';
-import { UserService } from '../../services/user/user.service';
-import { UserDetailDialogParams } from '../user-detail-dialog/interfaces/interfaces';
-import { GfUserDetailDialogComponent } from '../user-detail-dialog/user-detail-dialog.component';
 
 @Component({
   imports: [
@@ -283,25 +282,16 @@ export class GfAdminUsersComponent implements OnDestroy, OnInit {
   }
 
   private openUserDetailDialog(aUserId: string) {
-    const userData = this.dataSource.data.find(({ id }) => {
-      return id === aUserId;
-    });
-
-    if (!userData) {
-      this.router.navigate(['.'], { relativeTo: this.route });
-      return;
-    }
-
     const dialogRef = this.dialog.open<
       GfUserDetailDialogComponent,
       UserDetailDialogParams
     >(GfUserDetailDialogComponent, {
       autoFocus: false,
       data: {
-        userData,
         deviceType: this.deviceType,
         hasPermissionForSubscription: this.hasPermissionForSubscription,
-        locale: this.user?.settings?.locale
+        locale: this.user?.settings?.locale,
+        userId: aUserId
       },
       height: this.deviceType === 'mobile' ? '98vh' : '60vh',
       width: this.deviceType === 'mobile' ? '100vw' : '50rem'

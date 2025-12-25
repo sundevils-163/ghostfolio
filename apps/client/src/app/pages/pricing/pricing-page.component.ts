@@ -1,10 +1,10 @@
-import { NotificationService } from '@ghostfolio/client/core/notification/notification.service';
 import { DataService } from '@ghostfolio/client/services/data.service';
 import { UserService } from '@ghostfolio/client/services/user/user.service';
 import { User } from '@ghostfolio/common/interfaces';
 import { hasPermission, permissions } from '@ghostfolio/common/permissions';
 import { publicRoutes } from '@ghostfolio/common/routes/routes';
 import { translate } from '@ghostfolio/ui/i18n';
+import { NotificationService } from '@ghostfolio/ui/notifications';
 import { GfPremiumIndicatorComponent } from '@ghostfolio/ui/premium-indicator';
 
 import { CommonModule } from '@angular/common';
@@ -52,24 +52,32 @@ export class GfPricingPageComponent implements OnDestroy, OnInit {
   public coupon: number;
   public couponId: string;
   public durationExtension: StringValue;
+  public hasPermissionToCreateUser: boolean;
   public hasPermissionToUpdateUserSettings: boolean;
+
   public importAndExportTooltipBasic = translate(
     'DATA_IMPORT_AND_EXPORT_TOOLTIP_BASIC'
   );
+
   public importAndExportTooltipOSS = translate(
     'DATA_IMPORT_AND_EXPORT_TOOLTIP_OSS'
   );
+
   public importAndExportTooltipPremium = translate(
     'DATA_IMPORT_AND_EXPORT_TOOLTIP_PREMIUM'
   );
+
   public isLoggedIn: boolean;
   public label: string;
   public price: number;
   public priceId: string;
+
   public professionalDataProviderTooltipPremium = translate(
     'PROFESSIONAL_DATA_PROVIDER_TOOLTIP_PREMIUM'
   );
+
   public referralBrokers = [
+    'Alpian',
     'DEGIRO',
     'finpension',
     'frankly',
@@ -79,6 +87,7 @@ export class GfPricingPageComponent implements OnDestroy, OnInit {
     'VIAC',
     'Zak'
   ];
+
   public routerLinkFeatures = publicRoutes.features.routerLink;
   public routerLinkRegister = publicRoutes.register.routerLink;
   public user: User;
@@ -100,11 +109,18 @@ export class GfPricingPageComponent implements OnDestroy, OnInit {
   }
 
   public ngOnInit() {
-    const { baseCurrency, subscriptionOffer } = this.dataService.fetchInfo();
-    this.baseCurrency = baseCurrency;
+    const { baseCurrency, globalPermissions, subscriptionOffer } =
+      this.dataService.fetchInfo();
 
+    this.baseCurrency = baseCurrency;
     this.coupon = subscriptionOffer?.coupon;
     this.durationExtension = subscriptionOffer?.durationExtension;
+
+    this.hasPermissionToCreateUser = hasPermission(
+      globalPermissions,
+      permissions.createUserAccount
+    );
+
     this.label = subscriptionOffer?.label;
     this.price = subscriptionOffer?.price;
 

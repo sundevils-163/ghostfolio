@@ -1,4 +1,5 @@
 import { AccountService } from '@ghostfolio/api/app/account/account.service';
+import { AssetProfileChangedEvent } from '@ghostfolio/api/events/asset-profile-changed.event';
 import { PortfolioChangedEvent } from '@ghostfolio/api/events/portfolio-changed.event';
 import { LogPerformance } from '@ghostfolio/api/interceptors/performance-logging/performance-logging.interceptor';
 import { ExchangeRateDataService } from '@ghostfolio/api/services/exchange-rate-data/exchange-rate-data.service';
@@ -36,7 +37,7 @@ import { Big } from 'big.js';
 import { isUUID } from 'class-validator';
 import { endOfToday, isAfter } from 'date-fns';
 import { groupBy, uniqBy } from 'lodash';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class OrderService {
@@ -142,7 +143,7 @@ export class OrderService {
       } else {
         // Create custom asset profile
         name = name ?? data.SymbolProfile.connectOrCreate.create.symbol;
-        symbol = uuidv4();
+        symbol = randomUUID();
       }
 
       data.SymbolProfile.connectOrCreate.create.assetClass = assetClass;
@@ -224,6 +225,15 @@ export class OrderService {
         date: data.date as Date
       });
     }
+
+    this.eventEmitter.emit(
+      AssetProfileChangedEvent.getName(),
+      new AssetProfileChangedEvent({
+        currency: order.SymbolProfile.currency,
+        dataSource: order.SymbolProfile.dataSource,
+        symbol: order.SymbolProfile.symbol
+      })
+    );
 
     this.eventEmitter.emit(
       PortfolioChangedEvent.getName(),
