@@ -42,6 +42,7 @@ import {
   MarketDataDetailsResponse,
   MarketDataOfMarketsResponse,
   OAuthResponse,
+  PlatformsResponse,
   PortfolioDetails,
   PortfolioDividendsResponse,
   PortfolioHoldingResponse,
@@ -423,22 +424,9 @@ export class DataService {
     dataSource: DataSource;
     symbol: string;
   }) {
-    return this.http
-      .get<PortfolioHoldingResponse>(
-        `/api/v1/portfolio/holding/${dataSource}/${symbol}`
-      )
-      .pipe(
-        map((data) => {
-          if (data.activities) {
-            for (const order of data.activities) {
-              order.createdAt = parseISO(order.createdAt as unknown as string);
-              order.date = parseISO(order.date as unknown as string);
-            }
-          }
-
-          return data;
-        })
-      );
+    return this.http.get<PortfolioHoldingResponse>(
+      `/api/v1/portfolio/holding/${dataSource}/${symbol}`
+    );
   }
 
   public fetchInfo(): InfoItem {
@@ -521,6 +509,10 @@ export class DataService {
     );
   }
 
+  public fetchPlatforms() {
+    return this.http.get<PlatformsResponse>('/api/v1/platforms');
+  }
+
   public fetchPortfolioDetails({
     filters,
     withMarkets = false
@@ -562,6 +554,12 @@ export class DataService {
                 ? response.holdings[symbol].value
                 : response.holdings[symbol].valueInPercentage;
             }
+          }
+
+          if (response.summary?.dateOfFirstActivity) {
+            response.summary.dateOfFirstActivity = parseISO(
+              response.summary.dateOfFirstActivity
+            );
           }
 
           return response;

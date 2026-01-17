@@ -1,12 +1,14 @@
-import { DataSource, Tag } from '@prisma/client';
+import { AssetSubClass, DataSource, Tag } from '@prisma/client';
 import { Big } from 'big.js';
 
 export interface TransactionPointSymbol {
+  assetSubClass: AssetSubClass;
   averagePrice: Big;
   currency: string;
   dataSource: DataSource;
   dividend: Big;
   fee: Big;
+  feeInBaseCurrency: Big;
   firstBuyDate: string;
   includeInHoldings: boolean;
   investment: Big;
